@@ -1,0 +1,42 @@
+pragma solidity ^0.8.0;
+
+contract StudentAvatar {
+    struct Avatar {
+        string name;
+        uint256 age;
+        string school;
+        string[] courses;
+    }
+    
+    mapping(address => Avatar) public avatars;
+    
+    event AvatarCreated(address indexed owner, string name);
+    event CourseEnrolled(address indexed owner, string course);
+    
+    function createAvatar(string memory _name, uint256 _age, string memory _school) public {
+        Avatar storage avatar = avatars[msg.sender];
+        require(bytes(avatar.name).length == 0, "Avatar already exists");
+        
+        avatar.name = _name;
+        avatar.age = _age;
+        avatar.school = _school;
+        
+        emit AvatarCreated(msg.sender, _name);
+    }
+    
+    function enrollCourse(string memory _course) public {
+        Avatar storage avatar = avatars[msg.sender];
+        require(bytes(avatar.name).length != 0, "Avatar does not exist");
+        
+        avatar.courses.push(_course);
+        
+        emit CourseEnrolled(msg.sender, _course);
+    }
+    
+    function getAvatar(address _owner) public view returns (string memory, uint256, string memory, string[] memory) {
+        Avatar storage avatar = avatars[_owner];
+        require(bytes(avatar.name).length != 0, "Avatar does not exist");
+        
+        return (avatar.name, avatar.age, avatar.school, avatar.courses);
+    }
+}
