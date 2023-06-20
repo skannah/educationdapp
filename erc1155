@@ -1,0 +1,21 @@
+pragma solidity ^0.8.0;
+
+interface ERC155 {
+    event Update(string indexed _updateType, string _update);
+
+    function update(string calldata _updateType, string calldata _update) external;
+    function getUpdate(string calldata _updateType) external view returns (string memory);
+}
+
+contract ERC155Contract is ERC155 {
+    mapping(string => string) private updates;
+
+    function update(string calldata _updateType, string calldata _update) external override {
+        updates[_updateType] = _update;
+        emit Update(_updateType, _update);
+    }
+
+    function getUpdate(string calldata _updateType) external view override returns (string memory) {
+        return updates[_updateType];
+    }
+}
