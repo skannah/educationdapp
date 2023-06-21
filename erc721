@@ -1,0 +1,72 @@
+pragma solidity ^0.8.0;
+
+contract MyERC721 {
+    // Event that will be emitted on each transfer
+    event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);
+
+    // Mapping from token ID to owner address
+    mapping(uint256 => address) private tokenOwners;
+
+    // Mapping from owner address to token count
+    mapping(address => uint256) private ownershipTokenCount;
+
+    // Mapping from token ID to approved address
+    mapping(uint256 => address) private tokenApprovals;
+
+    // Total number of tokens
+    uint256 private totalTokens;
+
+    // Function to get the owner of a token
+    function ownerOf(uint256 _tokenId) public view returns (address) {
+        require(tokenOwners[_tokenId] != address(0), "Token does not exist");
+        return tokenOwners[_tokenId];
+    }
+
+    // Function to transfer a token to another address
+    function transfer(address _to, uint256 _tokenId) public {
+        require(_to != address(0), "Invalid recipient");
+        require(_to != address(this), "Contract cannot be the recipient");
+
+        // Check if the sender is the owner of the token
+        address owner = ownerOf(_tokenId);
+        require(msg.sender == owner, "Sender is not the owner of the token");
+
+        // Transfer ownership
+        tokenOwners[_tokenId] = _to;
+        ownershipTokenCount[msg.sender]--;
+        ownershipTokenCount[_to]++;
+
+        // Clear approval if any
+        if (tokenApprovals[_tokenId] != address(0)) {
+            delete tokenApprovals[_tokenId];
+        }
+
+        // Emit the transfer event
+        emit Transfer(msg.sender, _to, _tokenId);
+    }
+
+    // Function to approve a third party to transfer a token
+    function approve(address _approved, uint256 _tokenId) public {
+        // Check if the sender is the owner of the token
+        address owner = ownerOf(_tokenId);
+        require(msg.sender == owner, "Sender is not the owner of the token");
+
+        // Set the approved address for the token
+        tokenApprovals[_tokenId] = _approved;
+
+        // Emit the approval event
+        emit Approval(msg.sender, _approved, _tokenId);
+    }
+
+    // Function to get the approved address for a token
+    function getApproved(uint256 _tokenId) public view returns (address) {
+        require(tokenOwners[_tokenId] != address(0), "Token does not exist");
+        return tokenApprovals[_tokenId];
+    }
+
+    // Function to count the number of tokens owned by an address
+    function balanceOf(address _owner) public view returns (uint256) {
+        require(_owner != address(0), "Invalid address");
+        return ownershipTokenCount[_owner];
+    }
+}
