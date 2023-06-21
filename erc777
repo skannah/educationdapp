@@ -1,0 +1,123 @@
+pragma solidity ^0.8.0;
+
+import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
+import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+
+contract MyERC777 is IERC777 {
+    using Address for address;
+
+    mapping(address => uint256) private _balances;
+    uint256 private _totalSupply;
+    string private _name;
+    string private _symbol;
+
+    constructor(string memory name_, string memory symbol_) {
+        _name = name_;
+        _symbol = symbol_;
+    }
+
+    function name() public view override returns (string memory) {
+        return _name;
+    }
+
+    function symbol() public view override returns (string memory) {
+        return _symbol;
+    }
+
+    function totalSupply() public view override returns (uint256) {
+        return _totalSupply;
+    }
+
+    function balanceOf(address holder) public view override returns (uint256) {
+        return _balances[holder];
+    }
+
+    function send(address recipient, uint256 amount, bytes memory data) public override {
+        _send(msg.sender, msg.sender, recipient, amount, data, "", true);
+    }
+
+    function operatorSend(
+        address sender,
+        address recipient,
+        uint256 amount,
+        bytes memory data,
+        bytes memory operatorData
+    ) public override {
+        require(
+            isOperatorFor(msg.sender, sender),
+            "MyERC777: caller is not an operator for holder"
+        );
+        _send(msg.sender, sender, recipient, amount, data, operatorData, true);
+    }
+
+    function burn(uint256 amount, bytes memory data) public override {
+        _burn(msg.sender, msg.sender, amount, data, "");
+    }
+
+    function operatorBurn(
+        address account,
+        uint256 amount,
+        bytes memory data,
+        bytes memory operatorData
+    ) public override {
+        require(
+            isOperatorFor(msg.sender, account),
+            "MyERC777: caller is not an operator for holder"
+        );
+        _burn(msg.sender, account, amount, data, operatorData);
+    }
+
+    function _send(
+        address operator,
+        address sender,
+        address recipient,
+        uint256 amount,
+        bytes memory data,
+        bytes memory operatorData,
+        bool requireReceptionAck
+    ) internal {
+        require(sender != address(0), "MyERC777: send from the zero address");
+        require(recipient != address(0), "MyERC777: send to the zero address");
+
+        _beforeTokenTransfer(operator, sender, recipient, amount);
+
+        _balances[sender] -= amount;
+        _balances[recipient] += amount;
+
+        if (recipient.isContract()) {
+            IERC777Recipient(recipient).tokensReceived(
+                operator,
+                sender,
+                recipient,
+                amount,
+                data,
+                operatorData
+            );
+        }
+
+        emit Sent(operator, sender, recipient, amount, data, operatorData);
+
+        if (requireReceptionAck) {
+            require(
+                _checkReceptionAcknowledgment(data),
+                "MyERC777: no reception acknowledgment"
+            );
+        }
+    }
+
+    function _burn(
+        address operator,
+        address account,
+        uint256 amount,
+        bytes memory data,
+        bytes memory operatorData
+    ) internal {
+        require(account != address(0), "MyERC777: burn from the zero address");
+
+        _beforeTokenTransfer(operator, account, address(0), amount);
+
+        _balances[account] -= amount;
+        _totalSupply -= amount;
+
+        emit Burned(operator, account, amount, data, operator
