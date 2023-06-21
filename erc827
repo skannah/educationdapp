@@ -1,0 +1,135 @@
+pragma solidity ^0.8.0;
+
+interface ERC827 {
+    function approveAndCall(
+        address _spender,
+        uint256 _value,
+        bytes calldata _data
+    ) external returns (bool);
+
+    function transferAndCall(
+        address _to,
+        uint256 _value,
+        bytes calldata _data
+    ) external returns (bool);
+
+    function transferFromAndCall(
+        address _from,
+        address _to,
+        uint256 _value,
+        bytes calldata _data
+    ) external returns (bool);
+}
+
+contract MyERC827 is ERC827 {
+    mapping(address => mapping(address => uint256)) private _allowed;
+
+    function approveAndCall(
+        address _spender,
+        uint256 _value,
+        bytes calldata _data
+    ) external override returns (bool) {
+        require(_spender != address(0), "Invalid spender");
+
+        _allowed[msg.sender][_spender] = _value;
+
+        require(
+            ERC827Recipient(_spender).receiveApproval(
+                msg.sender,
+                _value,
+                address(this),
+                _data
+            ),
+            "Receive approval failed"
+        );
+
+        return true;
+    }
+
+    function transferAndCall(
+        address _to,
+        uint256 _value,
+        bytes calldata _data
+    ) external override returns (bool) {
+        require(_to != address(0), "Invalid recipient");
+
+        uint256 codeLength;
+        assembly {
+            codeLength := extcodesize(_to)
+        }
+
+        _transfer(msg.sender, _to, _value);
+
+        if (codeLength > 0) {
+            require(
+                ERC827Recipient(_to).tokenFallback(
+                    msg.sender,
+                    _value,
+                    _data
+                ),
+                "Token fallback failed"
+            );
+        }
+
+        return true;
+    }
+
+    function transferFromAndCall(
+        address _from,
+        address _to,
+        uint256 _value,
+        bytes calldata _data
+    ) external override returns (bool) {
+        require(_to != address(0), "Invalid recipient");
+
+        uint256 codeLength;
+        assembly {
+            codeLength := extcodesize(_to)
+        }
+
+        _transfer(_from, _to, _value);
+        _allowed[_from][msg.sender] -= _value;
+
+        if (codeLength > 0) {
+            require(
+                ERC827Recipient(_to).tokenFallback(
+                    _from,
+                    _value,
+                    _data
+                ),
+                "Token fallback failed"
+            );
+        }
+
+        return true;
+    }
+
+    function _transfer(
+        address _from,
+        address _to,
+        uint256 _value
+    ) internal {
+        require(_to != address(0), "Invalid recipient");
+        require(_value <= balanceOf(_from), "Insufficient balance");
+
+        balances[_from] -= _value;
+        balances[_to] += _value;
+
+        emit Transfer(_from, _to, _value);
+    }
+}
+
+interface ERC827Recipient {
+    function receiveApproval(
+        address _from,
+        uint256 _value,
+        address _token,
+        bytes calldata _data
+    ) external returns (bool);
+
+    function tokenFallback(
+        address _from,
+        uint256 _value,
+        bytes calldata _data
+    ) external returns (bool);
+}
