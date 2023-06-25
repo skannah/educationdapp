@@ -1,0 +1,12 @@
+ai = MathCountingAI()
+
+# Generate a question
+question = ai.generate_question()
+print(question)
+
+# Get user input
+user_input = input()
+
+# Check the answer
+result = ai.check_answer(user_input)
+print(result)
