@@ -1,0 +1,20 @@
+import random
+
+class MathCountingAI:
+    def __init__(self):
+        self.number = 0
+    
+    def generate_question(self):
+        self.number = random.randint(1, 10)
+        return f"What comes after {self.number}? "
+    
+    def check_answer(self, answer):
+        expected_answer = self.number + 1
+        try:
+            user_answer = int(answer)
+            if user_answer == expected_answer:
+                return "Correct! Great job!"
+            else:
+                return f"Oops! The correct answer is {expected_answer}. Try again!"
+        except ValueError:
+            return "Please enter a valid number."
