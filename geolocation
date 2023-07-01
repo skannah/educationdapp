@@ -1,0 +1,32 @@
+pragma solidity ^0.8.0;
+
+contract GeolocationAccess {
+    address public owner;
+    mapping(address => bool) public authorizedUsers;
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only the contract owner can perform this action.");
+        _;
+    }
+
+    modifier onlyAuthorized() {
+        require(authorizedUsers[msg.sender], "You are not authorized to access the geolocation.");
+        _;
+    }
+
+    function grantAccess(address user) external onlyOwner {
+        authorizedUsers[user] = true;
+    }
+
+    function revokeAccess(address user) external onlyOwner {
+        authorizedUsers[user] = false;
+    }
+
+    function checkAccess() external view onlyAuthorized returns (bool) {
+        return true; // Perform additional logic to validate the geolocation if needed
+    }
+}
