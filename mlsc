@@ -1,0 +1,43 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+
+# Read the dataset from CSV
+df = pd.read_csv('stablecoin_data.csv')
+
+# Data preprocessing
+# You might need to perform additional preprocessing steps based on your dataset
+
+# Split the data into features (X) and target variable (y)
+X = df.drop('funding_amount', axis=1)  # Assuming 'funding_amount' is the target variable
+y = df['funding_amount']
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Create a linear regression model
+model = LinearRegression()
+
+# Train the model
+model.fit(X_train, y_train)
+
+# Make predictions on the test set
+y_pred = model.predict(X_test)
+
+# Evaluate the model
+mse = mean_squared_error(y_test, y_pred)
+print("Mean Squared Error:", mse)
+
+# Additional analysis and visualization
+# You can perform further analysis, such as data visualization using matplotlib or seaborn, to gain insights into the data.
+
+# Example visualization using matplotlib
+import matplotlib.pyplot as plt
+
+# Scatter plot of actual vs. predicted funding amounts
+plt.scatter(y_test, y_pred)
+plt.xlabel('Actual Funding Amount')
+plt.ylabel('Predicted Funding Amount')
+plt.title('Actual vs. Predicted Funding Amount')
+plt.show()
