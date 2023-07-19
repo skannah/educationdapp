@@ -1,0 +1,56 @@
+from forex_python.converter import CurrencyRates
+
+def get_exchange_rates(base_currency, target_currencies):
+    """
+    Fetch exchange rates for the given base currency against multiple target currencies.
+
+    Parameters:
+        base_currency (str): The currency code (e.g., 'USD') for which to fetch exchange rates.
+        target_currencies (list): List of currency codes (e.g., ['EUR', 'GBP', 'JPY']) to compare against.
+
+    Returns:
+        dict: A dictionary containing exchange rates against the base currency for each target currency.
+    """
+    currency_rates = CurrencyRates()
+    exchange_rates = {}
+
+    for currency in target_currencies:
+        rate = currency_rates.get_rate(base_currency, currency)
+        exchange_rates[currency] = rate
+
+    return exchange_rates
+
+def optimize_school_funding(base_currency_amount, exchange_rates):
+    """
+    Optimize school funding by selecting the currency with the highest value.
+
+    Parameters:
+        base_currency_amount (float): The funding amount in the base currency.
+        exchange_rates (dict): A dictionary containing exchange rates against the base currency.
+
+    Returns:
+        tuple: A tuple containing the optimized currency code and the corresponding funding amount.
+    """
+    optimized_currency, max_amount = max(exchange_rates.items(), key=lambda x: x[1] * base_currency_amount)
+    return optimized_currency, max_amount * base_currency_amount
+
+if __name__ == "__main__":
+    base_currency = 'USD'
+    target_currencies = ['EUR', 'GBP', 'JPY']
+
+    # Fetch exchange rates
+    exchange_rates = get_exchange_rates(base_currency, target_currencies)
+
+    # School funding amount in USD
+    school_funding_amount_usd = 10000
+
+    # Optimize school funding
+    optimized_currency, optimized_amount = optimize_school_funding(school_funding_amount_usd, exchange_rates)
+
+    # Display results
+    print(f"Base Currency: {base_currency}")
+    print("Exchange Rates:")
+    for currency, rate in exchange_rates.items():
+        print(f"{currency}: {rate}")
+    print(f"Optimized Currency: {optimized_currency}")
+    print(f"Optimized Funding Amount: {optimized_amount:.2f} {optimized_currency}")
