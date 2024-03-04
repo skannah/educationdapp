@@ -1,0 +1,30 @@
+import requests
+
+def get_kevin_love_stats():
+    player_name = "Kevin Love"
+    api_url = f"https://www.balldontlie.io/api/v1/players?search={player_name}"
+
+    # Make a request to the NBA API
+    response = requests.get(api_url)
+    
+    if response.status_code == 200:
+        player_data = response.json()
+        if player_data['data']:
+            player_id = player_data['data'][0]['id']
+            stats_url = f"https://www.balldontlie.io/api/v1/players/{player_id}/stats"
+            
+            # Get player stats
+            stats_response = requests.get(stats_url)
+            if stats_response.status_code == 200:
+                player_stats = stats_response.json()
+                return player_stats
+            else:
+                print(f"Error getting player stats: {stats_response.status_code}")
+        else:
+            print(f"Player {player_name} not found.")
+    else:
+        print(f"Error searching for player: {response.status_code}")
+
+# Example usage
+kevin_love_stats = get_kevin_love_stats()
+print(kevin_love_stats)
