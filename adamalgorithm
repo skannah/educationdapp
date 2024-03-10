@@ -1,0 +1,22 @@
+import tensorflow as tf
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+
+# Generate some dummy data (you can replace this with your own data)
+X = [[1.0, 2.0], [2.0, 3.0], [3.0, 4.0]]
+y = [2.0, 3.0, 4.0]
+
+# Create a simple neural network model
+model = Sequential()
+model.add(Dense(1, input_shape=(2,)))
+
+# Compile the model with the Adam optimizer
+model.compile(optimizer=Adam(learning_rate=0.001), loss='mean_squared_error')
+
+# Train the model
+model.fit(X, y, epochs=100)
+
+# Get the learned weights
+weights = model.get_weights()
+print("Learned weights:", weights)
